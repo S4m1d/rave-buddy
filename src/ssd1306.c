@@ -1,5 +1,6 @@
 #include "ssd1306.h"
 #include "driver/i2c.h"
+#include <stdint.h>
 
 void i2c_init(void) {
   i2c_config_t conf = {
@@ -59,11 +60,28 @@ void ssd1306_init(void) {
   ssd1306_cmd(0xAF); // display on
 }
 
-void ssd1306_cmd_set_page(uint8_t page) {
-  ssd1306_cmd(0xB0 + page);
-}
+void ssd1306_cmd_set_page(uint8_t page) { ssd1306_cmd(0xB0 + page); }
 
 void ssd1306_cmd_set_col(uint8_t col) {
-  ssd1306_cmd(0x0F & col); // low nibble
+  ssd1306_cmd(0x0F & col);      // low nibble
   ssd1306_cmd(0x10 | col >> 4); // high nibble
+}
+
+void ssd1306_set_mode(i2c_cmd_handle_t handle, enum Ssd1306Mode m) {
+  switch (m) {
+  case Data:
+    i2c_master_write_byte(handle, 0x40, true);
+    break;
+  case Cmd:
+    i2c_master_write_byte(handle, 0x00, true);
+    break;
+  }
+}
+
+void ssd1306_set_as_i2c_device(i2c_cmd_handle_t handle, int mode) {
+  i2c_master_write_byte(handle, (SSD1306_ADDR << 1) | mode, true);
+}
+
+void ssd1306_write_page(i2c_cmd_handle_t handle, uint8_t data) {
+  i2c_master_write_byte(handle, data, true);
 }

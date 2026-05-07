@@ -1,5 +1,6 @@
 #include "draw.h"
 #include "driver/i2c.h"
+#include "hal/i2c_types.h"
 #include "ssd1306.h"
 
 void draw_fill(uint8_t pattern) {
@@ -90,21 +91,30 @@ void draw_fill_half_right(uint8_t pattern) {
   }
 }
 
-// esp_err_t draw_line_h(uint8_t start_x, uint8_t start_y,
-//                                      uint8_t len) {
-//   if (start_y >= 64 || start_x >= 128 || len > 128) {
-//     return ESP_ERR_INVALID_SIZE;
-//   }
-//   if (start_x + len > 128) {
-//     return ERR_LINE_OUT_OF_SCREEN;
-//   }
-//
-//   // TODO:
-//   // set start page
-//   // set start column
-//   // iterate and set bits corresponding to pixels
-//
-//   uint8_t start_page = start_y / 8;
-//
-//   return ESP_OK;
-// }
+esp_err_t draw_line_h(uint8_t start_x, uint8_t start_y, uint8_t len) {
+  if (start_y >= 64 || start_x >= 128 || len > 128) {
+    return ESP_ERR_INVALID_SIZE;
+  }
+  if (start_x + len > 128) {
+    return ERR_LINE_OUT_OF_SCREEN;
+  }
+
+  uint8_t start_page = start_y / 8;
+  ssd1306_cmd_set_page(start_page);
+  ssd1306_cmd_set_col(start_x);
+
+  i2c_cmd_handle_t handle = i2c_cmd_link_create();
+  i2c_master_start(handle);
+  ssd1306_set_as_i2c_device(handle, I2C_MASTER_WRITE);
+  ssd1306_set_mode(handle, Data);
+
+  for (int i = 0; i < len; i++) {
+    ssd1306_write_page(handle, 0x01 << (start_y%8));
+  }
+
+  i2c_master_stop(handle);
+  i2c_master_cmd_begin(I2C_MASTER_NUM, handle, pdMS_TO_TICKS(100));// actually send previously written bytes sequence from buffer to i2c
+  i2c_cmd_link_delete(handle);
+
+  return ESP_OK;
+}

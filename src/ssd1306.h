@@ -2,6 +2,7 @@
 #define SSD1306_H
 
 #include "esp_err.h"
+#include "driver/i2c.h"
 
 #define I2C_MASTER_SCL_IO 22
 #define I2C_MASTER_SDA_IO 21
@@ -17,5 +18,12 @@ void ssd1306_cmd(uint8_t cmd);
 void ssd1306_init(void);
 void ssd1306_cmd_set_page(uint8_t page);
 void ssd1306_cmd_set_col(uint8_t col);
+enum Ssd1306Mode {
+	Data,
+	Cmd,
+};
+void ssd1306_set_mode(i2c_cmd_handle_t handle, enum Ssd1306Mode m);
+void ssd1306_set_as_i2c_device(i2c_cmd_handle_t handle, int mode);
+void ssd1306_write_page(i2c_cmd_handle_t handle, uint8_t data);
 
 #endif
