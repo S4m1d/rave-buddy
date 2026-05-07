@@ -109,12 +109,52 @@ esp_err_t draw_line_h(uint8_t start_x, uint8_t start_y, uint8_t len) {
   ssd1306_set_mode(handle, Data);
 
   for (int i = 0; i < len; i++) {
-    ssd1306_write_page(handle, 0x01 << (start_y%8));
+    ssd1306_write_page(handle, 0x01 << (start_y % 8));
   }
 
   i2c_master_stop(handle);
-  i2c_master_cmd_begin(I2C_MASTER_NUM, handle, pdMS_TO_TICKS(100));// actually send previously written bytes sequence from buffer to i2c
+  i2c_master_cmd_begin(I2C_MASTER_NUM, handle,
+                       pdMS_TO_TICKS(100)); // actually send previously written
+                                            // bytes sequence from buffer to i2c
   i2c_cmd_link_delete(handle);
 
+  return ESP_OK;
+}
+
+esp_err_t draw_line_v(uint8_t start_x, uint8_t start_y, uint8_t len) {
+  if (start_y >= 64 || start_x >= 128 || len > 128) {
+    return ESP_ERR_INVALID_SIZE;
+  }
+  if (start_y + len > 64) {
+    return ERR_LINE_OUT_OF_SCREEN;
+  }
+
+  uint8_t start_page = start_y / 8;
+  uint8_t end_page = (start_y + len - 1) / 8;
+
+  for (int i = start_page; i <= end_page; i++) {
+    ssd1306_cmd_set_page(i);
+    ssd1306_cmd_set_col(start_x);
+
+    i2c_cmd_handle_t handle = i2c_cmd_link_create();
+    i2c_master_start(handle);
+    ssd1306_set_as_i2c_device(handle, I2C_MASTER_WRITE);
+    ssd1306_set_mode(handle, Data);
+
+    if (i == start_page) {
+      ssd1306_write_page(handle, 0xFF << (start_y % 8));
+    } else if (i == end_page) {
+      ssd1306_write_page(handle, 0xFF >> (8 - (start_y + len - 1) % 8));
+    } else {
+      ssd1306_write_page(handle, 0xFF);
+    }
+
+    i2c_master_stop(handle);
+    i2c_master_cmd_begin(
+        I2C_MASTER_NUM, handle,
+        pdMS_TO_TICKS(100)); // actually send previously written bytes sequence
+                             // from buffer to i2c
+    i2c_cmd_link_delete(handle);
+  }
   return ESP_OK;
 }

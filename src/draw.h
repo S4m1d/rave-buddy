@@ -14,4 +14,6 @@ void draw_fill_half_right(uint8_t pattern);
 
 esp_err_t draw_line_h(uint8_t start_x, uint8_t start_y, uint8_t len);
 
+esp_err_t draw_line_v(uint8_t start_x, uint8_t start_y, uint8_t len);
+
 #endif
