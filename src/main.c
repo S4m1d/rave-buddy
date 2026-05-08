@@ -16,5 +16,6 @@ void app_main(void) {
     procedure_animation_half_fill_spin(200, 1);
     procedure_animation_v_line_sequence(200, 2);
     procedure_animation_h_line_sequence(200, 2);
+    procedure_animation_nested_rectangles(500, 1);
   }
 }
