@@ -21,7 +21,7 @@ void ssd1306_cmd(uint8_t cmd) {
   i2c_cmd_handle_t handle = i2c_cmd_link_create();
   i2c_master_start(handle);
   i2c_master_write_byte(handle, (SSD1306_ADDR << 1) | I2C_MASTER_WRITE, true);
-  i2c_master_write_byte(handle, 0x00, true); // Co=0, D/C=0 (command)
+  ssd1306_set_mode(handle, Cmd); // Co=0, D/C=0 (command)
   i2c_master_write_byte(handle, cmd, true);
   i2c_master_stop(handle);
   i2c_master_cmd_begin(I2C_MASTER_NUM, handle, pdMS_TO_TICKS(100));

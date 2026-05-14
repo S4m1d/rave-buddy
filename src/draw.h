@@ -2,6 +2,8 @@
 #define DRAW_H
 #include "esp_err.h"
 
+void draw_frame(uint8_t *frame_bytes);
+
 void draw_fill(uint8_t pattern);
 
 void draw_fill_half_upper(uint8_t pattern);

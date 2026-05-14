@@ -1,18 +1,35 @@
 #include "draw.h"
 #include "driver/i2c.h"
+#include "freertos/projdefs.h"
 #include "hal/i2c_types.h"
 #include "ssd1306.h"
 #include <stdint.h>
 
-void draw_fill(uint8_t pattern) {
+void draw_frame(uint8_t *frame_bytes) {
   for (uint8_t page = 0; page < 8; page++) {
-    ssd1306_cmd(0xB0 + page);
-    ssd1306_cmd(0x00);
-    ssd1306_cmd(0x10);
+    ssd1306_cmd_set_page(page);
+    ssd1306_cmd_set_col(0);
     i2c_cmd_handle_t handle = i2c_cmd_link_create();
     i2c_master_start(handle);
-    i2c_master_write_byte(handle, (SSD1306_ADDR << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_write_byte(handle, 0x40, true); // data mode
+    ssd1306_set_as_i2c_device(handle, I2C_MASTER_WRITE);
+    ssd1306_set_mode(handle, Data);
+    for (uint8_t i = 0; i < 128; i++) {
+      i2c_master_write_byte(handle, frame_bytes[page*128+i], true);
+    }
+    i2c_master_stop(handle);
+    i2c_master_cmd_begin(I2C_MASTER_NUM, handle, pdMS_TO_TICKS(100));
+    i2c_cmd_link_delete(handle);
+  }
+}
+
+void draw_fill(uint8_t pattern) {
+  for (uint8_t page = 0; page < 8; page++) {
+    ssd1306_cmd_set_page(page);
+    ssd1306_cmd_set_col(0);
+    i2c_cmd_handle_t handle = i2c_cmd_link_create();
+    i2c_master_start(handle);
+    ssd1306_set_as_i2c_device(handle, I2C_MASTER_WRITE);
+    ssd1306_set_mode(handle, Data);
     for (uint8_t i = 0; i < 128; i++) {
       i2c_master_write_byte(handle, pattern, true);
     }
