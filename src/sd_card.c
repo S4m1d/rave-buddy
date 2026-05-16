@@ -24,8 +24,6 @@ esp_err_t sd_card_init() {
         .max_transfer_sz = 4096,
     };
 
-    //gpio_set_pull_mode(PIN_MISO, GPIO_PULLUP_ONLY);
-
     esp_err_t ret = spi_bus_initialize(SPI2_HOST, &bus_cfg, SPI_DMA_CH_AUTO);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "failed to initialize SPI bus: %s", esp_err_to_name(ret));
@@ -33,7 +31,7 @@ esp_err_t sd_card_init() {
     }
 
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
-    host.max_freq_khz = 400;  // start low, increase to 20000 once working
+    host.max_freq_khz = 7000;
     host.slot = SPI2_HOST;
 
     sdspi_device_config_t slot_cfg = SDSPI_DEVICE_CONFIG_DEFAULT();
