@@ -3,6 +3,7 @@
 #include "driver/i2c.h"
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
+#include "portmacro.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,39 +28,49 @@ void animation_static_frame(char *path) {
 }
 
 void animation_play(char *path, int iter_count) {
-    FILE *fp = fopen(path, "rb");
-    if (!fp) {
-        ESP_LOGE("animation_play", "failed to open %s", path);
+  FILE *fp = fopen(path, "rb");
+  if (!fp) {
+    ESP_LOGE("animation_play", "failed to open %s", path);
+    return;
+  }
+
+  // calculate frame count from file size
+  fseek(fp, 0, SEEK_END);
+  long file_size = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+  int frame_size = sizeof(int) + 1024;
+  int frames_count = file_size / frame_size;
+  ESP_LOGI("animation_play", "file size: %ld, frames count: %d", file_size,
+           frames_count);
+
+  for (int i = 0; i < iter_count; i++) {
+    fseek(fp, 4, SEEK_SET);
+    for (int j = 0; j < frames_count; j++) {
+      TickType_t ticks_start = xTaskGetTickCount();
+
+      int duration;
+      fread(&duration, sizeof(int), 1, fp);
+
+      uint8_t *frame_bytes = malloc(1024);
+      if (!frame_bytes) {
+        ESP_LOGE("animation_play", "malloc failed");
+        fclose(fp);
         return;
+      }
+
+      fread(frame_bytes, 1, 1024, fp);
+
+      draw_frame(frame_bytes);
+      free(frame_bytes);
+
+      TickType_t elapsed = xTaskGetTickCount() - ticks_start;
+      TickType_t delay = pdMS_TO_TICKS(duration);
+
+      if (elapsed < delay) {
+        vTaskDelay(delay - elapsed);
+      }
     }
+  }
 
-    // calculate frame count from file size
-    fseek(fp, 0, SEEK_END);
-    long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    int frame_size = sizeof(int) + 1024;
-    int frames_count = file_size / frame_size;
-    ESP_LOGI("animation_play", "file size: %ld, frames: %d", file_size, frames_count);
-
-    for (int i = 0; i < iter_count; i++) {
-        fseek(fp, 0, SEEK_SET);
-        for (int j = 0; j < frames_count; j++) {
-            int duration;
-            fread(&duration, sizeof(int), 1, fp);
-
-            uint8_t *frame_bytes = malloc(1024);
-            if (!frame_bytes) {
-                ESP_LOGE("animation_play", "malloc failed");
-                fclose(fp);
-                return;
-            }
-
-            fread(frame_bytes, 1, 1024, fp);
-            draw_frame(frame_bytes);
-            vTaskDelay(pdMS_TO_TICKS(duration));
-            free(frame_bytes);
-        }
-    }
-
-    fclose(fp);
+  fclose(fp);
 }
