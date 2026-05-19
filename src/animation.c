@@ -43,11 +43,10 @@ void animation_play(char *path, int iter_count) {
   ESP_LOGI("animation_play", "file size: %ld, frames count: %d", file_size,
            frames_count);
 
+  TickType_t ticks_start = xTaskGetTickCount();
   for (int i = 0; i < iter_count; i++) {
     fseek(fp, 4, SEEK_SET);
     for (int j = 0; j < frames_count; j++) {
-      TickType_t ticks_start = xTaskGetTickCount();
-
       int duration;
       fread(&duration, sizeof(int), 1, fp);
 
@@ -69,6 +68,8 @@ void animation_play(char *path, int iter_count) {
       if (elapsed < delay) {
         vTaskDelay(delay - elapsed);
       }
+
+      ticks_start = xTaskGetTickCount();
     }
   }
 
