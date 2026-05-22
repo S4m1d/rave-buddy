@@ -25,22 +25,25 @@ Generate .clangd for correct LSP behaviour:
 
 ### SD Card
 SPI interface:
-CS   -> GPIO5
-SCK  -> GPIO18
-MOSI -> GPIO23
-MISO -> GPIO19
-VCC  -> V5
+- CS   -> GPIO5
+- SCK  -> GPIO18
+- MOSI -> GPIO23
+- MISO -> GPIO19
+- VCC  -> V5
 
 ### Left LCD display SSD1306
 I2C interface:
-GND -> GND
-VCC -> 3V3
-SCL -> GPIO22
-SDA -> GPIO21
+- GND -> GND
+- VCC -> 3V3
+- SCL -> GPIO22
+- SDA -> GPIO21
 
 ### Right LCD display SSD1306 (in progress)
-SCL -> GPIO25
-SDA -> GPIO26
+I2C interface:
+- GND -> GND
+- VCC -> 3V3
+- SCL -> GPIO25
+- SDA -> GPIO26
 
 ### Buttons
 #### Button 1
