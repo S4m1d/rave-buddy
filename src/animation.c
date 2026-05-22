@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void animation_static_frame(char *path) {
+void animation_static_frame(i2c_port_t device_num, char *path) {
   FILE *fp = fopen(path, "rb");
   if (!fp) {
     ESP_LOGE("anim", "failed to open %s", path);
@@ -23,11 +23,11 @@ void animation_static_frame(char *path) {
   }
   fread(frame_bytes, 1, 1024, fp);
   fclose(fp);
-  draw_frame(frame_bytes);
+  draw_frame(device_num, frame_bytes);
   free(frame_bytes);
 }
 
-void animation_play(char *path, int iter_count) {
+void animation_play(i2c_port_t device_num, char *path, int iter_count) {
   FILE *fp = fopen(path, "rb");
   if (!fp) {
     ESP_LOGE("animation_play", "failed to open %s", path);
@@ -59,7 +59,7 @@ void animation_play(char *path, int iter_count) {
 
       fread(frame_bytes, 1, 1024, fp);
 
-      draw_frame(frame_bytes);
+      draw_frame(device_num, frame_bytes);
       free(frame_bytes);
 
       TickType_t elapsed = xTaskGetTickCount() - ticks_start;

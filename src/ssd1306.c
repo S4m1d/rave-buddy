@@ -1,8 +1,9 @@
 #include "ssd1306.h"
 #include "driver/i2c.h"
+#include "hal/i2c_types.h"
 #include <stdint.h>
 
-void i2c_init(void) {
+void i2c_init(i2c_port_t device_num) {
   i2c_config_t conf = {
       .mode = I2C_MODE_MASTER,
       .sda_io_num = I2C_MASTER_SDA_IO,
@@ -11,60 +12,60 @@ void i2c_init(void) {
       .scl_pullup_en = GPIO_PULLUP_ENABLE,
       .master.clk_speed = I2C_MASTER_FREQ_HZ,
   };
-  i2c_param_config(I2C_MASTER_NUM, &conf);
-  i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0);
+  i2c_param_config(I2C_DISPLAY_1, &conf);
+  i2c_driver_install(I2C_DISPLAY_1, conf.mode, 0, 0, 0);
 }
 
 // I2C protocol with SSD1306 specifics sequence: START -> Device Address -> mode
 // bytes (0x00 for cmd or 0x40 for pixels data) -> data or command bytes -> STOP
-void ssd1306_cmd(uint8_t cmd) {
+void ssd1306_cmd(i2c_port_t device_num, uint8_t cmd) {
   i2c_cmd_handle_t handle = i2c_cmd_link_create();
   i2c_master_start(handle);
   i2c_master_write_byte(handle, (SSD1306_ADDR << 1) | I2C_MASTER_WRITE, true);
   ssd1306_set_mode(handle, Cmd); // Co=0, D/C=0 (command)
   i2c_master_write_byte(handle, cmd, true);
   i2c_master_stop(handle);
-  i2c_master_cmd_begin(I2C_MASTER_NUM, handle, pdMS_TO_TICKS(100));
+  i2c_master_cmd_begin(device_num, handle, pdMS_TO_TICKS(100));
   i2c_cmd_link_delete(handle);
 }
 
-void ssd1306_init(void) {
+void ssd1306_init(i2c_port_t device_num) {
   vTaskDelay(pdMS_TO_TICKS(100));
-  ssd1306_cmd(0xAE); // display off
-  ssd1306_cmd(0x20); // memory addressing mode
-  ssd1306_cmd(0x00); // horizontal
-  ssd1306_cmd(0xB0); // page start
-  ssd1306_cmd(0xC8); // COM scan direction
-  ssd1306_cmd(0x00); // low column
-  ssd1306_cmd(0x10); // high column
-  ssd1306_cmd(0x40); // start line
-  ssd1306_cmd(0x81); // contrast
-  ssd1306_cmd(0xFF); // max contrast
-  ssd1306_cmd(0xA1); // segment remap
-  ssd1306_cmd(0xA6); // normal display
-  ssd1306_cmd(0xA8); // multiplex ratio
-  ssd1306_cmd(0x3F); // 64 rows (use 0x1F for 32 rows)
-  ssd1306_cmd(0xA4); // output follows RAM
-  ssd1306_cmd(0xD3); // display offset
-  ssd1306_cmd(0x00);
-  ssd1306_cmd(0xD5); // clock divide
-  ssd1306_cmd(0xF0);
-  ssd1306_cmd(0xD9); // pre-charge
-  ssd1306_cmd(0x22);
-  ssd1306_cmd(0xDA); // COM pins
-  ssd1306_cmd(0x12);
-  ssd1306_cmd(0xDB); // VCOMH deselect
-  ssd1306_cmd(0x20);
-  ssd1306_cmd(0x8D); // charge pump
-  ssd1306_cmd(0x14); // enable
-  ssd1306_cmd(0xAF); // display on
+  ssd1306_cmd(device_num, 0xAE); // display off
+  ssd1306_cmd(device_num, 0x20); // memory addressing mode
+  ssd1306_cmd(device_num, 0x00); // horizontal
+  ssd1306_cmd(device_num, 0xB0); // page start
+  ssd1306_cmd(device_num, 0xC8); // COM scan direction
+  ssd1306_cmd(device_num, 0x00); // low column
+  ssd1306_cmd(device_num, 0x10); // high column
+  ssd1306_cmd(device_num, 0x40); // start line
+  ssd1306_cmd(device_num, 0x81); // contrast
+  ssd1306_cmd(device_num, 0xFF); // max contrast
+  ssd1306_cmd(device_num, 0xA1); // segment remap
+  ssd1306_cmd(device_num, 0xA6); // normal display
+  ssd1306_cmd(device_num, 0xA8); // multiplex ratio
+  ssd1306_cmd(device_num, 0x3F); // 64 rows (use 0x1F for 32 rows)
+  ssd1306_cmd(device_num, 0xA4); // output follows RAM
+  ssd1306_cmd(device_num, 0xD3); // display offset
+  ssd1306_cmd(device_num, 0x00);
+  ssd1306_cmd(device_num, 0xD5); // clock divide
+  ssd1306_cmd(device_num, 0xF0);
+  ssd1306_cmd(device_num, 0xD9); // pre-charge
+  ssd1306_cmd(device_num, 0x22);
+  ssd1306_cmd(device_num, 0xDA); // COM pins
+  ssd1306_cmd(device_num, 0x12);
+  ssd1306_cmd(device_num, 0xDB); // VCOMH deselect
+  ssd1306_cmd(device_num, 0x20);
+  ssd1306_cmd(device_num, 0x8D); // charge pump
+  ssd1306_cmd(device_num, 0x14); // enable
+  ssd1306_cmd(device_num, 0xAF); // display on
 }
 
-void ssd1306_cmd_set_page(uint8_t page) { ssd1306_cmd(0xB0 + page); }
+void ssd1306_cmd_set_page(i2c_port_t device_num, uint8_t page) { ssd1306_cmd(device_num, 0xB0 + page); }
 
-void ssd1306_cmd_set_col(uint8_t col) {
-  ssd1306_cmd(0x0F & col);      // low nibble
-  ssd1306_cmd(0x10 | col >> 4); // high nibble
+void ssd1306_cmd_set_col(i2c_port_t device_num, uint8_t col) {
+  ssd1306_cmd(device_num, 0x0F & col);      // low nibble
+  ssd1306_cmd(device_num, 0x10 | col >> 4); // high nibble
 }
 
 void ssd1306_set_mode(i2c_cmd_handle_t handle, enum Ssd1306Mode m) {

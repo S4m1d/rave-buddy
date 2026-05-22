@@ -26,17 +26,17 @@ void list_sdcard() {
 
 void app_main(void) {
   sd_card_init();
-  //list_sdcard();
+  // list_sdcard();
 
-  i2c_init();
-  ssd1306_init();
-  draw_fill(0x00); // all pixels off
+  i2c_init(I2C_DISPLAY_1);
+  ssd1306_init(I2C_DISPLAY_1);
+  draw_fill(I2C_DISPLAY_1, 0x00); // all pixels off
 
   while (1) {
-//    animation_static_frame("/sdcard/frame.bin");
-//    vTaskDelay(pdMS_TO_TICKS(2000));
-    animation_play("/sdcard/animation.bin", 100);
-//    draw_fill(0x00);
-//    procedure_animation_nested_rectangles(500, 1);
+    procedure_animation_nested_rectangles(I2C_DISPLAY_1, 300, 1);
+
+    draw_fill(I2C_DISPLAY_1, 0x00);
+
+    animation_play(I2C_DISPLAY_1, "/sdcard/animation.bin", 100);
   }
 }
